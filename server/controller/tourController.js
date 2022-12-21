@@ -2,7 +2,7 @@ const Tour = require("../model/tourModel");
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
-const APIFeatures = require("../utils/apiFeatures");
+const factory = require("./handleFactory");
 
 exports.aliasTopTour = catchAsync(async (req, res, next) => {
   (req.query.limit = "5"),
@@ -10,79 +10,6 @@ exports.aliasTopTour = catchAsync(async (req, res, next) => {
     (req.query.fields = "name, price, difficulty, summary");
 
   next();
-});
-
-exports.getAllTours = catchAsync(async (req, res, next) => {
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-
-  const tours = await features.query;
-  res.status(200).json({
-    status: "success",
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
-
-exports.getTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id);
-  if (!tour) {
-    return next(
-      new AppError("No tour found with the ID", httpStatus.NOT_FOUND)
-    );
-  }
-
-  res.status(httpStatus.FOUND).json({
-    status: "success",
-    data: { tour },
-  });
-});
-
-exports.createTour = catchAsync(async (req, res, next) => {
-  const newTour = await Tour.create(req.body);
-
-  res.status(httpStatus.CREATED).json({
-    status: "success",
-    data: {
-      tour: newTour,
-    },
-  });
-});
-
-exports.updateTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!tour) {
-    return next(
-      new AppError("No tour found with the ID", httpStatus.NOT_FOUND)
-    );
-  }
-
-  res.status(200).json({
-    status: "success",
-    data: { tour },
-  });
-});
-exports.deleteTour = catchAsync(async (req, res) => {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-
-  if (!tour) {
-    return next(
-      new AppError("No tour found with the ID", httpStatus.NOT_FOUND)
-    );
-  }
-  res.status(200).json({
-    status: "success",
-    data: null,
-  });
 });
 
 exports.getTourStat = catchAsync(async (req, res, next) => {
@@ -166,9 +93,10 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   const [lat, lng] = latlng.split(",");
   const radius = unit === "mi" ? distance / 3963.2 : distance / 6378.1;
   if (!lat || !lng) {
-    next(
+    return next(
       new AppError(
-        "Please provide latitude and longitude in the format lat,lng"
+        "Please provide latitude and longitude in the format lat,lng",
+        httpStatus.NOT_FOUND
       )
     );
   }
@@ -194,9 +122,10 @@ exports.getDistances = catchAsync(async (req, res, next) => {
   const multiplier = unit === "mi" ? 0.000621371 : 0.001;
 
   if (!lat || !lng) {
-    next(
+    return next(
       new AppError(
-        "Please provide latitude and longitude in the format lat,lng"
+        "Please provide latitude and longitude in the format lat,lng",
+        httpStatus.NOT_FOUND
       )
     );
   }
@@ -225,3 +154,23 @@ exports.getDistances = catchAsync(async (req, res, next) => {
     data: { data: distances },
   });
 });
+
+// exports.deleteTour = catchAsync(async (req, res, next) => {
+//   const tour = await Tour.findByIdAndDelete(req.params.id);
+
+//   if (!tour) {
+//     return next(
+//       new AppError("No tour found with the ID", httpStatus.NOT_FOUND)
+//     );
+//   }
+//   res.status(200).json({
+//     status: "success",
+//     data: null,
+//   });
+// });
+
+exports.deleteTour = factory.deleteOne(Tour);
+exports.updateTour = factory.updateOne(Tour);
+exports.createTour = factory.createOne(Tour);
+exports.getAllTours = factory.getAll(Tour);
+exports.getTour = factory.getOne(Tour, { path: "reviews" });

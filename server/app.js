@@ -13,23 +13,24 @@ const app = express();
 
 const tourRouter = require("./route/tourRouter");
 const userRouter = require("./route/userRouter");
+const reviewRouter = require("./route/reviewRouter");
 
 app.use(helmet());
 
-app.use(xss());
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-const limiter = rateLimit({
-  max: 100,
-  windowMS: 60 * 60 * 1000,
-  message: "Too many request, try again in 1 hour time",
-});
+// const limiter = rateLimit({
+//   max: 100,
+//   windowMS: 60 * 60 * 1000,
+//   message: "Too many request, try again in 1 hour time",
+// });
 app.use(morgan("dev"));
 app.use(mongoSanitize());
+app.use(xss());
 
-app.use("/api", limiter);
+// app.use("/api", limiter);
 app.use(express.json());
 app.use(
   hpp({
@@ -52,6 +53,7 @@ app.use((req, res, next) => {
 
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/reviews", reviewRouter);
 
 // Unhandled Route
 app.all("*", (req, res, next) => {
