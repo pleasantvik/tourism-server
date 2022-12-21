@@ -2,6 +2,7 @@ const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
 const User = require("../model/userModel");
 const AppError = require("../utils/appError");
+const Factory = require("./handleFactory");
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -12,32 +13,27 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const user = await User.find();
+// exports.getAllUsers = catchAsync(async (req, res, next) => {
+//   const user = await User.find();
 
-  res.status(httpStatus.OK).json({
-    status: "success",
-    data: { user },
-  });
-});
-exports.getUser = (req, res, next) => {
-  res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-    status: "error",
-    message: "This route is not yet defined",
-  });
-};
+//   res.status(httpStatus.OK).json({
+//     status: "success",
+//     data: { user },
+//   });
+// });
+// exports.getUser = (req, res, next) => {
+//   res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+//     status: "error",
+//     message: "This route is not yet defined",
+//   });
+// };
 exports.createUser = (req, res, next) => {
   res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
     status: "error",
-    message: "This route is not yet defined",
+    message: "This route is defined! Please use /signup instead",
   });
 };
-exports.updateUser = (req, res, next) => {
-  res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-    status: "error",
-    message: "This route is not yet defined",
-  });
-};
+
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
 
@@ -77,3 +73,13 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
+exports.deleteUser = Factory.deleteOne(User);
+exports.updateUser = Factory.updateOne(User);
+exports.getUser = Factory.getOne(User);
+exports.getAllUsers = Factory.getAll(User);
