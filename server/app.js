@@ -7,6 +7,7 @@ const xss = require("xss-clean");
 const httpStatus = require("http-status");
 const AppError = require("./utils/appError");
 const hpp = require("hpp");
+const cookieParser = require("cookie-parser");
 
 const globalErrorHandler = require("./controller/errorController");
 const app = express();
@@ -32,6 +33,7 @@ app.use(xss());
 
 // app.use("/api", limiter);
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   hpp({
     whitelist: [
@@ -47,7 +49,7 @@ app.use(
 
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  console.log("Hello");
+  console.log(req.cookies);
   next();
 });
 
