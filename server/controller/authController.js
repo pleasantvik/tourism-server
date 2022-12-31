@@ -87,15 +87,15 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, httpStatus.OK, res);
 });
 
-exports.logout = (res, req, next) => {
-  res.cookie("jwt", "logged out", {
-    expiresIn: new Date(Date.now() + 10 * 1000),
+exports.logout = catchAsync((req, res, next) => {
+  res.cookie("jwt", "loggedout", {
+    expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
   });
   res.status(httpStatus.OK).json({
     status: "success",
   });
-};
+});
 
 // PROTECT ROUTE
 exports.protect = catchAsync(async (req, res, next) => {
