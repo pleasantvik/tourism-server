@@ -98,6 +98,8 @@ exports.protect = catchAsync(async (req, res, next) => {
     token = req.headers.authorization.split(" ")[1];
 
     // console.log(token);
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
   }
 
   //CHECK IF TOKEN EXIST
@@ -135,6 +137,49 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //GRANT ACCESS TO PROTECTED ROUTE
   req.user = currentUser;
+  next();
+});
+
+//FOR LOGIN USER- Only for render pages
+exports.isLogged = catchAsync(async (req, res, next) => {
+  //1. Get token and check if it exist
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+
+    // console.log(token);
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+
+  //CHECK IF TOKEN EXIST
+  if (!token) {
+    return next();
+  }
+
+  //2. Verify the token
+
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  // console.log(decoded);
+
+  //3. Check if user exist
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) return next();
+
+  //4. Check if user changed password after token was issued
+  if (currentUser.changedPasswordAfter(decoded.iat)) return next();
+
+  //GRANT ACCESS TO PROTECTED ROUTE
+  // res.locals.user = currentUser;
+  return res.json({
+    data: currentUser,
+    token,
+  });
+  // req.user = currentUser;
+
   next();
 });
 
